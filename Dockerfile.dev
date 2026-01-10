@@ -1,0 +1,21 @@
+# MCP-Hound Development Dockerfile
+# Includes dev dependencies and supports live reload
+
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source (will be overridden by volume mount in docker-compose)
+COPY tsconfig.json ./
+COPY eslint.config.js ./
+COPY src/ ./src/
+
+# Expose port
+EXPOSE 3000
+
+# Default command (can be overridden)
+CMD ["npm", "run", "dev"]

@@ -1,0 +1,82 @@
+# MCP-Hound Docker Compose
+# Development and testing configuration
+
+services:
+  #============================================================================
+  # Production service
+  #============================================================================
+  mcp-hound:
+    build:
+      context: .
+      target: production
+    image: jmagly/mcp-hound:latest
+    container_name: mcp-hound
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      - HOUND_URL=${HOUND_URL:-http://hound:6080}
+      - HOUND_TIMEOUT=${HOUND_TIMEOUT:-30000}
+      - GITEA_URL=${GITEA_URL:-}
+      - GITEA_TOKEN=${GITEA_TOKEN:-}
+      - GITHUB_URL=${GITHUB_URL:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - MCP_PORT=3000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    # Uncomment to add Hound service
+    # depends_on:
+    #   - hound
+
+  #============================================================================
+  # Test runner - runs all tests in container
+  #============================================================================
+  test:
+    build:
+      context: .
+      target: test
+    image: jmagly/mcp-hound:test
+    container_name: mcp-hound-test
+    profiles:
+      - test
+    # Test stage runs tests during build, so this just validates the build
+
+  #============================================================================
+  # Development with live reload
+  #============================================================================
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mcp-hound-dev
+    profiles:
+      - dev
+    ports:
+      - "3100:3000"
+    volumes:
+      - ./src:/app/src:ro
+      - ./package.json:/app/package.json:ro
+    environment:
+      - HOUND_URL=${HOUND_URL:-http://localhost:6080}
+      - GITEA_URL=${GITEA_URL:-}
+      - GITEA_TOKEN=${GITEA_TOKEN:-}
+      - GITHUB_URL=${GITHUB_URL:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    command: ["npm", "run", "dev"]
+
+  #============================================================================
+  # Optional: Hound service for local development
+  #============================================================================
+  # hound:
+  #   image: etsy/hound
+  #   container_name: hound
+  #   ports:
+  #     - "6080:6080"
+  #   volumes:
+  #     - ./hound-config.json:/data/config.json:ro
+  #   environment:
+  #     - HOUND_REPO_DIR=/data/repos

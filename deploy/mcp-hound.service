@@ -1,0 +1,33 @@
+[Unit]
+Description=MCP-Hound Code Search Server
+Documentation=https://github.com/jmagly/mcp-hound
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/mcp-hound
+# Use system node or adjust path for nvm installations
+ExecStart=/usr/bin/node /opt/mcp-hound/dist/index.js --http --port 3100
+Restart=always
+RestartSec=10
+
+# Environment file
+EnvironmentFile=/etc/mcp-hound/env
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mcp-hound
+
+# Optional: Uncomment for dedicated service user (recommended for production)
+# User=mcp-hound
+# Group=mcp-hound
+
+# Optional: Security hardening (may require ReadWritePaths for clients.json)
+# NoNewPrivileges=true
+# ProtectSystem=strict
+# ProtectHome=true
+# PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
